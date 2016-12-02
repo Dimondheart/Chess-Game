@@ -39,95 +39,95 @@ public class ChessBoardTest
   [Test]
   public void GetTileCoordinatesWithNull()
   {
-    Vector2 expected = -Vector2.one;
+    IntVector2 expected = -IntVector2.one;
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
 
-    Vector2 actual = board.GetTileCoordinates(null);
+    IntVector2 actual = board.GetTileCoordinates(null);
 
-    Assert.That(Mathf.Approximately(expected.x, actual.x) && Mathf.Approximately(expected.y, actual.y));
+    Assert.That(actual == expected);
   }
 
   [Test]
   public void GetTileCoordinatesWithPieceNotInBoard()
   {
-    Vector2 expected = -Vector2.one;
+    IntVector2 expected = -IntVector2.one;
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
 
-    Vector2 actual = board.GetTileCoordinates(new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE));
+    IntVector2 actual = board.GetTileCoordinates(new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE));
 
-    Assert.That(Mathf.Approximately(expected.x, actual.x) && Mathf.Approximately(expected.y, actual.y));
+    Assert.That(actual == expected);
   }
 
   [Test]
   public void GetTileCoordinates()
   {
-    Vector2 expected = new Vector2(1.0f, 4.0f);
+    IntVector2 expected = new IntVector2(1, 4);
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
     ChessPiece piece = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
     Assert.NotNull(piece);
-    board.boardTiles[(int) expected.x, (int) expected.y] = piece;
+    board.boardTiles[expected.x, expected.y] = piece;
 
-    Vector2 actual = board.GetTileCoordinates(piece);
+    IntVector2 actual = board.GetTileCoordinates(piece);
 
-    Assert.That(Mathf.Approximately(expected.x, actual.x) && Mathf.Approximately(expected.y, actual.y));
+    Assert.That(actual == expected);
   }
 
   [Test]
   public void MoveToEmpty()
   {
-    Vector2 initialLocation = Vector2.zero;
-    Vector2 newLocation = new Vector2(1.0f, 4.0f);
+    IntVector2 initialLocation = IntVector2.zero;
+    IntVector2 newLocation = new IntVector2(1, 4);
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
     ChessPiece piece = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
-    board.boardTiles[(int) initialLocation.x, (int) initialLocation.y] = piece;
+    board.boardTiles[initialLocation.x, initialLocation.y] = piece;
 
     // Try to move the piece
     board.MovePiece(piece, newLocation);
 
-    Assert.AreSame(board.boardTiles[(int) newLocation.x, (int) newLocation.y], piece);
-    Assert.IsNull(board.boardTiles[(int) initialLocation.x, (int) initialLocation.y]);
+    Assert.AreSame(board.boardTiles[newLocation.x, newLocation.y], piece);
+    Assert.IsNull(board.boardTiles[initialLocation.x, initialLocation.y]);
   }
 
   [Test]
   public void MoveToOccupied()
   {
-    Vector2 piece1Loc = Vector2.zero;
-    Vector2 piece2Loc = new Vector2(1.0f, 4.0f);
+    IntVector2 piece1Loc = IntVector2.zero;
+    IntVector2 piece2Loc = new IntVector2(1, 4);
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
     ChessPiece piece1 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
     ChessPiece piece2 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.BLACK);
-    board.boardTiles[(int) piece1Loc.x, (int) piece1Loc.y] = piece1;
-    board.boardTiles[(int) piece2Loc.x, (int) piece2Loc.y] = piece2;
+    board.boardTiles[piece1Loc.x, piece1Loc.y] = piece1;
+    board.boardTiles[piece2Loc.x, piece2Loc.y] = piece2;
 
     // Try to move the piece
     board.MovePiece(piece1, piece2Loc);
 
-    Assert.AreSame(board.boardTiles[(int) piece2Loc.x, (int) piece2Loc.y], piece1);
-    Assert.IsNull(board.boardTiles[(int) piece1Loc.x, (int) piece1Loc.y]);
+    Assert.AreSame(board.boardTiles[piece2Loc.x, piece2Loc.y], piece1);
+    Assert.IsNull(board.boardTiles[piece1Loc.x, piece1Loc.y]);
   }
 
   [Test]
   public void EliminationDifferentColor()
   {
-    Vector2 piece1Loc = Vector2.zero;
-    Vector2 piece2Loc = new Vector2(1.0f, 4.0f);
+    IntVector2 piece1Loc = IntVector2.zero;
+    IntVector2 piece2Loc = new IntVector2(1, 4);
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
     ChessPiece piece1 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
     ChessPiece piece2 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.BLACK);
-    board.boardTiles[(int) piece1Loc.x, (int) piece1Loc.y] = piece1;
-    board.boardTiles[(int) piece2Loc.x, (int) piece2Loc.y] = piece2;
+    board.boardTiles[piece1Loc.x, piece1Loc.y] = piece1;
+    board.boardTiles[piece2Loc.x, piece2Loc.y] = piece2;
 
     // Try to move the piece
     board.MovePiece(piece1, piece2Loc);
@@ -138,15 +138,15 @@ public class ChessBoardTest
   [Test]
   public void EliminationSameColor()
   {
-    Vector2 piece1Loc = Vector2.zero;
-    Vector2 piece2Loc = new Vector2(1.0f, 4.0f);
+    IntVector2 piece1Loc = IntVector2.zero;
+    IntVector2 piece2Loc = new IntVector2(1, 4);
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
     ChessPiece piece1 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
     ChessPiece piece2 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
-    board.boardTiles[(int) piece1Loc.x, (int) piece1Loc.y] = piece1;
-    board.boardTiles[(int) piece2Loc.x, (int) piece2Loc.y] = piece2;
+    board.boardTiles[piece1Loc.x, piece1Loc.y] = piece1;
+    board.boardTiles[piece2Loc.x, piece2Loc.y] = piece2;
 
     // Try to move the piece
     board.MovePiece(piece1, piece2Loc);
@@ -160,7 +160,7 @@ public class ChessBoardTest
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
-    Vector2 valid = new Vector2(3.0f, 4.0f);
+    IntVector2 valid = new IntVector2(3, 4);
 
     Assert.That(board.AreCoordinatesOverBoard(valid));
   }
@@ -171,8 +171,8 @@ public class ChessBoardTest
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
-    Vector2 v1 = new Vector2(-1.0f, 4.0f);
-    Vector2 v2 = new Vector2(8.0f, 4.0f);
+    IntVector2 v1 = new IntVector2(-1, 4);
+    IntVector2 v2 = new IntVector2(8, 4);
 
     Assert.That(!board.AreCoordinatesOverBoard(v1) && !board.AreCoordinatesOverBoard(v2));
   }

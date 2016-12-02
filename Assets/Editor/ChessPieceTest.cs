@@ -14,14 +14,4 @@ public class ChessPieceTest
 
     Assert.AreEqual(piece1.pieceType, ChessPiece.PieceType.QUEEN);
   }
-
-  [Test]
-  public void DemoteToPawn()
-  {
-    ChessPiece piece1 = new ChessPiece(ChessPiece.PieceType.QUEEN, ChessPiece.PieceColor.WHITE);
-
-    piece1.DemoteToPawn();
-
-    Assert.AreEqual(piece1.pieceType, ChessPiece.PieceType.PAWN);
-  }
 }

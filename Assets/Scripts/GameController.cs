@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class GameController : MonoBehaviour
@@ -6,11 +7,15 @@ public class GameController : MonoBehaviour
   public static ChessRuleSet currentRuleSet = new ChessRuleSet();
 
   public ChessBoard currentBoard;
-  public GameObject mouseMarker;
+  public Mouse3D mouse3D;
+  public AudioClip mainMenuMusic;
+  public AudioClip mainGameMusic;
+  public Text whosTurnText;
+  public GameObject mainMenuPanel;
 
   private ChessPiece.PieceColor currentTurn;
   private ChessPiece selectedChessPiece;
-  private ChessPiece highlightedPiece;
+  private bool isInMainMenu;
 
   public ChessBoardGUI currentBoardGUI
   {
@@ -20,86 +25,108 @@ public class GameController : MonoBehaviour
     }
   }
 
+  private AudioSource bgmSource
+  {
+    get
+    {
+      return GameObject.FindGameObjectWithTag("MainCamera").GetComponent<AudioSource>();
+    }
+  }
+
   void Start()
   {
     ChessRuleEvaluator.currentRuleSet = currentRuleSet;
-    ChessRuleEvaluator.ResetBoard(currentBoard);
-    currentBoardGUI.ResetBoardGUI(currentBoard);
+    currentBoard.SetupBoard();
+    currentBoardGUI.ResetBoardGUI();
     currentTurn = ChessPiece.PieceColor.WHITE;
-    mouseMarker.transform.position = new Vector3(1000.0f, 1000.0f, 1000.0f);
+    isInMainMenu = true;
+    mouse3D.enabled = false;
   }
 
   void Update()
   {
-    Vector3 mousePos = Input.mousePosition;
-    mousePos.z = 1.0f;
-    Vector3 mousePosInWorld =
-      GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>().ScreenToWorldPoint(mousePos);
-    float prevY = mousePosInWorld.y;
-    int counter = 0;
-    while (mousePosInWorld.y > currentBoard.transform.position.y)
+    CameraOrbitController mainCamOrbiter =
+      GameObject.FindGameObjectWithTag("MainCameraContainer").GetComponent<CameraOrbitController>();
+    mainCamOrbiter.manualControlEnabled = !isInMainMenu;
+    mainCamOrbiter.autoOrbitEnabled = isInMainMenu;
+    mouse3D.enabled = !isInMainMenu;
+    if (isInMainMenu)
     {
-      counter++;
-      mousePos.z += 0.1f;
-      mousePosInWorld =
-        GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>().ScreenToWorldPoint(mousePos);
-      mouseMarker.transform.position = mousePosInWorld;
-      if (mousePosInWorld.y > prevY || counter > 1000)
+      if (!Object.ReferenceEquals(bgmSource.clip, mainMenuMusic))
       {
-        selectedChessPiece = null;
-        break;
-      }
-      else if (Physics.CheckSphere(mouseMarker.transform.position, 0.025f))
-      {
-        bool stopSearching = false;
-        Collider[] colliders = Physics.OverlapSphere(mouseMarker.transform.position, 0.025f);
-        foreach (Collider c in colliders)
-        {
-          if (c.gameObject.GetComponent<ChessPieceGUI>() != null)
-          {
-            highlightedPiece = c.gameObject.GetComponent<ChessPieceGUI>().chessPiece;
-            stopSearching = true;
-            break;
-          }
-          else
-          {
-            highlightedPiece = null;
-          }
-        }
-        if (stopSearching)
-        {
-          break;
-        }
+        bgmSource.clip = mainMenuMusic;
+        bgmSource.Play();
       }
     }
-    if (Input.GetMouseButtonUp(0))
+    else
     {
-      if (selectedChessPiece == null)
+      if (Input.GetKeyUp(KeyCode.R))
       {
-        if (highlightedPiece != null && highlightedPiece.pieceColor == currentTurn && currentBoard.IsPieceInPlay(highlightedPiece))
-        {
-          selectedChessPiece = highlightedPiece;
-          highlightedPiece = null;
-        }
+        RestartGame();
       }
-      else
+      if (Input.GetMouseButtonUp(0))
       {
-        Vector2 targetCoords = -Vector2.one;
-        if (highlightedPiece != null && highlightedPiece != selectedChessPiece)
+        if (selectedChessPiece == null)
         {
-          targetCoords = currentBoard.GetTileCoordinates(highlightedPiece);
+          GameObject highlighted = mouse3D.highlighted;
+          if (highlighted != null && highlighted.GetComponent<ChessPieceGUI>() != null)
+          {
+            ChessPiece highlightedPiece = highlighted.GetComponent<ChessPieceGUI>().chessPiece;
+            if (highlightedPiece.pieceColor == currentTurn && currentBoard.IsPieceInPlay(highlightedPiece))
+            {
+              selectedChessPiece = highlightedPiece;
+            }
+          }
+
         }
         else
         {
-          targetCoords = currentBoardGUI.GetBoardTileCoordinates(mousePosInWorld);
+          IntVector2 targetCoords = -IntVector2.one;
+          GameObject highlighted = mouse3D.highlighted;
+          if (highlighted != null)
+          {
+            if (highlighted.GetComponent<ChessPieceGUI>() != null)
+            {
+              ChessPiece highlightedPiece = highlighted.GetComponent<ChessPieceGUI>().chessPiece;
+              if (highlightedPiece != selectedChessPiece)
+              {
+                if (highlightedPiece.pieceColor == selectedChessPiece.pieceColor)
+                {
+                  selectedChessPiece = highlightedPiece;
+                }
+                else
+                {
+                  targetCoords = currentBoard.GetTileCoordinates(highlightedPiece);
+                }
+              }
+            }
+            else if (Object.ReferenceEquals(highlighted.GetComponent<ChessBoardGUI>(), currentBoardGUI))
+            {
+              targetCoords = currentBoardGUI.GetBoardTileCoordinates(mouse3D.transform.position);
+            }
+            if (ChessRuleEvaluator.CanMovePiece(selectedChessPiece, targetCoords, currentBoard))
+            {
+              currentBoard.MovePiece(selectedChessPiece, targetCoords);
+              selectedChessPiece = null;
+              StartNextTurn();
+            }
+          }
+          else
+          {
+            selectedChessPiece = null;
+          }
         }
-        if (ChessRuleEvaluator.CanMovePiece(selectedChessPiece, targetCoords, currentBoard))
-        {
-          currentBoard.MovePiece(selectedChessPiece, targetCoords);
-          StartNextTurn();
-        }
-        selectedChessPiece = null;
       }
+    }
+  }
+
+  void OnDrawGizmos()
+  {
+    if (selectedChessPiece != null && currentBoardGUI != null && currentBoardGUI.GetGUIPiece(selectedChessPiece) != null)
+    {
+      Gizmos.color = Color.green;
+      Bounds b = currentBoardGUI.GetGUIPiece(selectedChessPiece).GetComponent<Renderer>().bounds;
+      Gizmos.DrawWireCube(b.center, b.size);
     }
   }
 
@@ -108,16 +135,57 @@ public class GameController : MonoBehaviour
     if (currentTurn == ChessPiece.PieceColor.WHITE)
     {
       currentTurn = ChessPiece.PieceColor.BLACK;
-      GameObject.FindGameObjectWithTag("MainCameraContainer").GetComponent<Rigidbody>()
-        .MoveRotation(Quaternion.Euler(60.0f, 180.0f, 0.0f));
+      GameObject.FindGameObjectWithTag("MainCameraContainer").GetComponent<CameraOrbitController>().SmoothOrbit(
+        new Vector3(60.0f, 180.0f, 0.0f)
+      );
+      whosTurnText.color = new Color(15 / 255.0f, 15 / 255.0f, 15 / 255.0f);
+      whosTurnText.text = "Blacks Turn";
     }
     else
     {
       currentTurn = ChessPiece.PieceColor.WHITE;
-      GameObject.FindGameObjectWithTag("MainCameraContainer").GetComponent<Rigidbody>()
-        .MoveRotation(Quaternion.Euler(60.0f, 0.0f, 0.0f));
+      GameObject.FindGameObjectWithTag("MainCameraContainer").GetComponent<CameraOrbitController>().SmoothOrbit(
+        new Vector3(60.0f, 0.0f, 0.0f)
+      );
+      whosTurnText.color = new Color(235 / 255.0f, 235 / 255.0f, 235 / 255.0f);
+      whosTurnText.text = "Whites Turn";
     }
     selectedChessPiece = null;
-    highlightedPiece = null;
+  }
+
+  public void RestartGame()
+  {
+    currentTurn = ChessPiece.PieceColor.WHITE;
+    currentBoard.SetupBoard();
+    currentBoardGUI.ResetBoardGUI();
+    GameObject.FindGameObjectWithTag("MainCameraContainer").GetComponent<CameraOrbitController>().SmoothOrbit(
+      new Vector3(60.0f, 0.0f, 0.0f)
+    );
+  }
+
+  public void StartGame()
+  {
+    if (!isInMainMenu)
+    {
+      return;
+    }
+    isInMainMenu = false;
+    mainMenuPanel.SetActive(isInMainMenu);
+    RestartGame();
+    bgmSource.clip = mainGameMusic;
+    bgmSource.Play();
+  }
+
+  public void QuitApplication()
+  {
+    if (isInMainMenu)
+    {
+      Application.Quit();
+    }
+    else
+    {
+      Debug.Log("Check for any save content");
+      Application.Quit();
+    }
   }
 }

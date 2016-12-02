@@ -6,10 +6,9 @@ public class ChessPieceGUI : MonoBehaviour
   public ChessPiece chessPiece;
   public ChessBoardGUI boardGUI;
 
-  public void Setup(ChessPiece chessPiece, ChessBoardGUI boardGUI, GameObject icon)
+  void Start()
   {
-    this.chessPiece = chessPiece;
-    this.boardGUI = boardGUI;
+    GetComponent<Renderer>().enabled = false;
   }
 
   void Update()
@@ -20,21 +19,24 @@ public class ChessPieceGUI : MonoBehaviour
     }
     else if (boardGUI.board.eliminatedBlackPieces.Contains(chessPiece))
     {
-      transform.SetParent(boardGUI.eliminatedBlackOrigin, true);
+      transform.SetParent(boardGUI.eliminatedBlackOrigin.parent, true);
     }
     else if (boardGUI.board.eliminatedWhitePieces.Contains(chessPiece))
     {
-      transform.SetParent(boardGUI.eliminatedWhiteOrigin, true);
+      transform.SetParent(boardGUI.eliminatedWhiteOrigin.parent, true);
     }
     else
     {
-      transform.SetParent(null);
+      GetComponent<Renderer>().enabled = false;
+      return;
     }
+    GetComponent<Renderer>().enabled = true;
     transform.localPosition = boardGUI.GetLocalCoordinates(chessPiece);
   }
 
-  void OnTriggerEnter(Collider collider)
+  public void Setup(ChessPiece chessPiece, ChessBoardGUI boardGUI, GameObject icon)
   {
-//    Debug.LogError("HI" + collider.gameObject);
+    this.chessPiece = chessPiece;
+    this.boardGUI = boardGUI;
   }
 }

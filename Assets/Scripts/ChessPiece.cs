@@ -27,9 +27,15 @@ public class ChessPiece
 
   public ChessPiece(PieceType pieceType, PieceColor pieceColor)
   {
-    // FIXME validate the enum range
+    if ((int) pieceType < 0 || (int) pieceType > (int) PieceType.KING)
+    {
+      Debug.LogError("Attempted to create a chess piece with an invalid type.");
+    }
     this.pieceType = pieceType;
-    // FIXME validate the enum range
+    if ((int) pieceColor < 0 || (int) pieceColor > (int) PieceColor.BLACK)
+    {
+      Debug.LogError("Attempted to create a chess piece with an invalid color.");
+    }
     this.pieceColor = pieceColor;
   }
 
@@ -37,14 +43,5 @@ public class ChessPiece
   public void Promote(ChessPiece promoteTo)
   {
     pieceType = promoteTo.pieceType;
-  }
-
-  /** Demotes the piece to a pawn, unless it is already a pawn. */
-  public void DemoteToPawn()
-  {
-    if (pieceType != PieceType.PAWN)
-    {
-      pieceType = PieceType.PAWN;
-    }
   }
 }
