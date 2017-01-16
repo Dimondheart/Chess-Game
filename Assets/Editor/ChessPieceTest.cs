@@ -7,8 +7,8 @@ public class ChessPieceTest
   [Test]
   public void Promote()
   {
-    ChessPiece piece1 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
-    ChessPiece piece2 = new ChessPiece(ChessPiece.PieceType.QUEEN, ChessPiece.PieceColor.WHITE);
+    ChessPiece piece1 = new Pawn(ChessPiece.PieceColor.WHITE);
+    ChessPiece piece2 = new Queen(ChessPiece.PieceColor.WHITE);
 
     piece1.Promote(piece2);
 

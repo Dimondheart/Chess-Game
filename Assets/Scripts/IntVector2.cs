@@ -128,7 +128,7 @@ public struct IntVector2
     }
   }
 
-  /** The number of 'steps' or units along both axes of this vector. */
+  /** The number of horizontal and vetical 'steps' or units along both axes of this vector. */
   public int stepMagnitude
   {
     get
@@ -149,7 +149,7 @@ public struct IntVector2
 
   public override string ToString()
   {
-    return string.Format("({0}, {1})", x, y);
+    return string.Format("IntVector2:({0},{1})", x, y);
   }
 
   public bool IsZero()
@@ -159,7 +159,7 @@ public struct IntVector2
 
   public bool IsDiagonal()
   {
-    return Mathf.Abs(x) == Mathf.Abs(y) && !IsZero();
+    return x != 0 && Mathf.Abs(x) == Mathf.Abs(y);
   }
 
   public bool IsHorizontal()
@@ -172,11 +172,19 @@ public struct IntVector2
     return x == 0 && y != 0;
   }
 
-  /** Unit form for an integer vector is defined as having a distance of one tile away, either vertically, horizontally
+  /** Unit form for an integer vector is defined as having a distance of exactly tile away, either vertically, horizontally
    * or diagonally.
    */
   public bool IsInUnitForm()
   {
-    return Mathf.Abs(x) <= 1 && Mathf.Abs(y) <= 1 && !IsZero();
+    return !IsZero() && Mathf.Abs(x) <= 1 && Mathf.Abs(y) <= 1;
+  }
+
+  /** Move this vector one unit along each axis towards zero. An axis value is not changed if it is already 0. */
+  public void StepTowardsZero()
+  {
+    // UNITTEST
+    x = x >= 0 ? Mathf.Max(x - 1, 0) : x + 1;
+    y = y >= 0 ? Mathf.Max(y - 1, 0) : y + 1;
   }
 }

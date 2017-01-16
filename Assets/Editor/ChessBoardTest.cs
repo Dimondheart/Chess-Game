@@ -12,28 +12,11 @@ public class ChessBoardTest
     ChessBoard board = obj.GetComponent<ChessBoard>();
 
    // Verify that all tiles are empty
-    foreach (ChessPiece piece in board.boardTiles)
+    foreach (ChessPiece piece in board.GetAllPiecesInPlay())
     {
       Assert.Null(piece);
     }
-  }
-
-  [Test]
-  public void InitialEliminatedStates()
-  {
-    GameObject obj = new GameObject();
-    obj.AddComponent<ChessBoard>();
-    ChessBoard board = obj.GetComponent<ChessBoard>();
-
-    // Verify that all eliminated pieces lists are empty
-    foreach (ChessPiece piece in board.eliminatedWhitePieces)
-    {
-      Assert.Null(piece);
-    }
-    foreach (ChessPiece piece in board.eliminatedBlackPieces)
-    {
-      Assert.Null(piece);
-    }
+    // TODO check eliminated
   }
 
   [Test]
@@ -57,7 +40,7 @@ public class ChessBoardTest
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
 
-    IntVector2 actual = board.GetTileCoordinates(new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE));
+    IntVector2 actual = board.GetTileCoordinates(new Pawn(ChessPiece.PieceColor.WHITE));
 
     Assert.That(actual == expected);
   }
@@ -69,9 +52,9 @@ public class ChessBoardTest
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
-    ChessPiece piece = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
+    ChessPiece piece = new Pawn(ChessPiece.PieceColor.WHITE);
     Assert.NotNull(piece);
-    board.boardTiles[expected.x, expected.y] = piece;
+    board.PlacePiece(piece, expected);
 
     IntVector2 actual = board.GetTileCoordinates(piece);
 
@@ -86,14 +69,14 @@ public class ChessBoardTest
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
-    ChessPiece piece = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
-    board.boardTiles[initialLocation.x, initialLocation.y] = piece;
+    ChessPiece piece = new Pawn(ChessPiece.PieceColor.WHITE);
+    board.PlacePiece(piece, initialLocation);
 
     // Try to move the piece
     board.MovePiece(piece, newLocation);
 
-    Assert.AreSame(board.boardTiles[newLocation.x, newLocation.y], piece);
-    Assert.IsNull(board.boardTiles[initialLocation.x, initialLocation.y]);
+    Assert.AreSame(board.GetChessPieceAt(newLocation), piece);
+    Assert.IsNull(board.GetChessPieceAt(initialLocation));
   }
 
   [Test]
@@ -104,16 +87,16 @@ public class ChessBoardTest
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
-    ChessPiece piece1 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
-    ChessPiece piece2 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.BLACK);
-    board.boardTiles[piece1Loc.x, piece1Loc.y] = piece1;
-    board.boardTiles[piece2Loc.x, piece2Loc.y] = piece2;
+    ChessPiece piece1 = new Pawn(ChessPiece.PieceColor.WHITE);
+    ChessPiece piece2 = new Pawn(ChessPiece.PieceColor.BLACK);
+    board.PlacePiece(piece1, piece1Loc);
+    board.PlacePiece(piece2, piece2Loc);
 
     // Try to move the piece
     board.MovePiece(piece1, piece2Loc);
 
-    Assert.AreSame(board.boardTiles[piece2Loc.x, piece2Loc.y], piece1);
-    Assert.IsNull(board.boardTiles[piece1Loc.x, piece1Loc.y]);
+    Assert.AreSame(board.GetChessPieceAt(piece2Loc), piece1);
+    Assert.IsNull(board.GetChessPieceAt(piece1Loc));
   }
 
   [Test]
@@ -124,15 +107,15 @@ public class ChessBoardTest
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
-    ChessPiece piece1 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
-    ChessPiece piece2 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.BLACK);
-    board.boardTiles[piece1Loc.x, piece1Loc.y] = piece1;
-    board.boardTiles[piece2Loc.x, piece2Loc.y] = piece2;
+    ChessPiece piece1 = new Pawn(ChessPiece.PieceColor.WHITE);
+    ChessPiece piece2 = new Pawn(ChessPiece.PieceColor.BLACK);
+    board.PlacePiece(piece1, piece1Loc);
+    board.PlacePiece(piece2, piece2Loc);
 
     // Try to move the piece
     board.MovePiece(piece1, piece2Loc);
 
-    Assert.That(board.eliminatedBlackPieces.Contains(piece2));
+    Assert.That(board.IsEliminated(piece2));
   }
 
   [Test]
@@ -143,15 +126,15 @@ public class ChessBoardTest
     GameObject obj = new GameObject();
     obj.AddComponent<ChessBoard>();
     ChessBoard board = obj.GetComponent<ChessBoard>();
-    ChessPiece piece1 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
-    ChessPiece piece2 = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
-    board.boardTiles[piece1Loc.x, piece1Loc.y] = piece1;
-    board.boardTiles[piece2Loc.x, piece2Loc.y] = piece2;
+    ChessPiece piece1 = new Pawn(ChessPiece.PieceColor.WHITE);
+    ChessPiece piece2 = new Pawn(ChessPiece.PieceColor.WHITE);
+    board.PlacePiece(piece1, piece1Loc);
+    board.PlacePiece(piece2, piece2Loc);
 
     // Try to move the piece
     board.MovePiece(piece1, piece2Loc);
 
-    Assert.That(board.eliminatedWhitePieces.Contains(piece2));
+    Assert.That(board.IsEliminated(piece2));
   }
 
   [Test]

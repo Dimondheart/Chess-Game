@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
-public class ChessPiece
+public abstract class ChessPiece
 {
   public enum PieceType
   {
@@ -25,7 +25,7 @@ public class ChessPiece
   public readonly PieceColor pieceColor;
   public int movementsMade = 0;
 
-  public ChessPiece(PieceType pieceType, PieceColor pieceColor)
+  protected ChessPiece(PieceType pieceType, PieceColor pieceColor)
   {
     if ((int) pieceType < 0 || (int) pieceType > (int) PieceType.KING)
     {
@@ -37,6 +37,21 @@ public class ChessPiece
       Debug.LogError("Attempted to create a chess piece with an invalid color.");
     }
     this.pieceColor = pieceColor;
+  }
+
+  public abstract Bitboard GetBasicMoves(ChessBoard chessBoard);
+
+  public virtual SpecialMovement[] GetSpecialMoves(ChessBoard chessBoard)
+  {
+    return new SpecialMovement[0];
+  }
+
+  public MovementSet GetMovementSet(ChessBoard chessBoard)
+  {
+    MovementSet moveSet = new MovementSet();
+    moveSet.movementBitboard = GetBasicMoves(chessBoard);
+    moveSet.specialMovements = GetSpecialMoves(chessBoard);
+    return moveSet;
   }
 
   /** Promotes the piece to the specified type. Does not check if the specified promotion is legal. */

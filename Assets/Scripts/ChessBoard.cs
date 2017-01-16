@@ -29,9 +29,16 @@ public class ChessBoard : MonoBehaviour
     }
   }
 
-  public readonly ChessPiece[,] boardTiles = new ChessPiece[8, 8];
-  public readonly List<ChessPiece> eliminatedWhitePieces = new List<ChessPiece>(8);
-  public readonly List<ChessPiece> eliminatedBlackPieces = new List<ChessPiece>(8);
+  /** The number of piece movements made. */
+  public int pieceMovementCount { get; private set; }
+  public readonly Dictionary<ChessPiece, int> lastMoveNumber = new Dictionary<ChessPiece, int>();
+
+  /** This array should only be accessed directly within SetPiece(), GetChessPiece___(), SetupBoard(). */
+  private readonly ChessPiece[,] boardTiles = new ChessPiece[8, 8];
+  /** This array should only be accessed directly within SetPiece(), GetChessPiece___(), SetupBoard(). */
+  private readonly List<ChessPiece> eliminatedWhitePieces = new List<ChessPiece>(8);
+  /** This array should only be accessed directly within SetPiece(), GetChessPiece___(), SetupBoard(). */
+  private readonly List<ChessPiece> eliminatedBlackPieces = new List<ChessPiece>(8);
 
   public int width
   {
@@ -55,13 +62,14 @@ public class ChessBoard : MonoBehaviour
     // UNITTEST
     eliminatedWhitePieces.Clear();
     eliminatedBlackPieces.Clear();
+    lastMoveNumber.Clear();
     for (int x = 0; x < boardTiles.GetLength(0); x++)
     {
       // White pawns
-      boardTiles[x, 1] = new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.WHITE);
+      boardTiles[x, 1] = new Pawn(ChessPiece.PieceColor.WHITE);
       // Black pawns
       boardTiles[x, boardTiles.GetLength(1) - 2] =
-        new ChessPiece(ChessPiece.PieceType.PAWN, ChessPiece.PieceColor.BLACK);
+        new Pawn(ChessPiece.PieceColor.BLACK);
       // Empty spaces
       for (int y = 2; y < 6; y++)
       {
@@ -77,28 +85,28 @@ public class ChessBoard : MonoBehaviour
         switch (x)
         {
           case 0:
-            newPiece1 = new ChessPiece(ChessPiece.PieceType.ROOK, ChessPiece.PieceColor.WHITE);
-            newPiece2 = new ChessPiece(ChessPiece.PieceType.ROOK, ChessPiece.PieceColor.WHITE);
-            newPiece3 = new ChessPiece(ChessPiece.PieceType.ROOK, ChessPiece.PieceColor.BLACK);
-            newPiece4 = new ChessPiece(ChessPiece.PieceType.ROOK, ChessPiece.PieceColor.BLACK);
+            newPiece1 = new Rook(ChessPiece.PieceColor.WHITE);
+            newPiece2 = new Rook(ChessPiece.PieceColor.WHITE);
+            newPiece3 = new Rook(ChessPiece.PieceColor.BLACK);
+            newPiece4 = new Rook(ChessPiece.PieceColor.BLACK);
             break;
           case 1:
-            newPiece1 = new ChessPiece(ChessPiece.PieceType.KNIGHT, ChessPiece.PieceColor.WHITE);
-            newPiece2 = new ChessPiece(ChessPiece.PieceType.KNIGHT, ChessPiece.PieceColor.WHITE);
-            newPiece3 = new ChessPiece(ChessPiece.PieceType.KNIGHT, ChessPiece.PieceColor.BLACK);
-            newPiece4 = new ChessPiece(ChessPiece.PieceType.KNIGHT, ChessPiece.PieceColor.BLACK);
+            newPiece1 = new Knight(ChessPiece.PieceColor.WHITE);
+            newPiece2 = new Knight(ChessPiece.PieceColor.WHITE);
+            newPiece3 = new Knight(ChessPiece.PieceColor.BLACK);
+            newPiece4 = new Knight(ChessPiece.PieceColor.BLACK);
             break;
           case 2:
-            newPiece1 = new ChessPiece(ChessPiece.PieceType.BISHOP, ChessPiece.PieceColor.WHITE);
-            newPiece2 = new ChessPiece(ChessPiece.PieceType.BISHOP, ChessPiece.PieceColor.WHITE);
-            newPiece3 = new ChessPiece(ChessPiece.PieceType.BISHOP, ChessPiece.PieceColor.BLACK);
-            newPiece4 = new ChessPiece(ChessPiece.PieceType.BISHOP, ChessPiece.PieceColor.BLACK);
+            newPiece1 = new Bishop(ChessPiece.PieceColor.WHITE);
+            newPiece2 = new Bishop(ChessPiece.PieceColor.WHITE);
+            newPiece3 = new Bishop(ChessPiece.PieceColor.BLACK);
+            newPiece4 = new Bishop(ChessPiece.PieceColor.BLACK);
             break;
           case 3:
-            newPiece1 = new ChessPiece(ChessPiece.PieceType.QUEEN, ChessPiece.PieceColor.WHITE);
-            newPiece2 = new ChessPiece(ChessPiece.PieceType.KING, ChessPiece.PieceColor.WHITE);
-            newPiece3 = new ChessPiece(ChessPiece.PieceType.QUEEN, ChessPiece.PieceColor.BLACK);
-            newPiece4 = new ChessPiece(ChessPiece.PieceType.KING, ChessPiece.PieceColor.BLACK);
+            newPiece1 = new Queen(ChessPiece.PieceColor.WHITE);
+            newPiece2 = new King(ChessPiece.PieceColor.WHITE);
+            newPiece3 = new Queen(ChessPiece.PieceColor.BLACK);
+            newPiece4 = new King(ChessPiece.PieceColor.BLACK);
             break;
           default:
             break;
@@ -122,8 +130,37 @@ public class ChessBoard : MonoBehaviour
         boardTiles[x, y] = null;
       }
     }
-    boardTiles[1, 1] = new ChessPiece(ChessPiece.PieceType.ROOK, ChessPiece.PieceColor.WHITE);
-    boardTiles[1, 3] = new ChessPiece(ChessPiece.PieceType.KING, ChessPiece.PieceColor.BLACK);
+    boardTiles[0, 0] = new Rook(ChessPiece.PieceColor.WHITE);
+    boardTiles[7, 0] = new Rook(ChessPiece.PieceColor.WHITE);
+    boardTiles[4, 0] = new King(ChessPiece.PieceColor.WHITE);
+  }
+
+  /** Add a chess piece to the board on the specified tile. Eliminates the piece currently on the tile. Does nothing
+   * if the given chess piece is null.
+   */
+  public void PlacePiece(ChessPiece chessPiece, IntVector2 tile)
+  {
+    // UNITTEST
+    if (chessPiece == null || !AreCoordinatesOverBoard(tile))
+    {
+      return;
+    }
+    ChessPiece pieceAt = GetChessPieceAt(tile);
+    if (pieceAt != null)
+    {
+      EliminatePiece(pieceAt);
+    }
+    boardTiles[tile.x, tile.y] = chessPiece;
+  }
+
+  public void EliminatePiece(IntVector2 pieceAt)
+  {
+    // TODO implement
+  }
+
+  public void EliminatePiece(ChessPiece chessPiece)
+  {
+    // TODO implement
   }
 
   public void MovePiece(IntVector2 pieceAt, IntVector2 tileCoordinates)
@@ -175,6 +212,8 @@ public class ChessBoard : MonoBehaviour
       atDest.movementsMade++;
     }
     // Move the piece
+    pieceMovementCount++;
+    lastMoveNumber[piece] = pieceMovementCount;
     piece.movementsMade++;
     boardTiles[posOfPiece.x, posOfPiece.y] = null;
     boardTiles[tileCoordinates.x, tileCoordinates.y] = piece;
@@ -196,6 +235,16 @@ public class ChessBoard : MonoBehaviour
       }
     }
     return count;
+  }
+
+  public bool HasPieceMoved(ChessPiece piece)
+  {
+    return GetNumberOfLastMove(piece) <= 0;
+  }
+
+  public int GetNumberOfLastMove(ChessPiece piece)
+  {
+    return lastMoveNumber.ContainsKey(piece) ? lastMoveNumber[piece] : 0;
   }
 
   public ChessPiece GetChessPieceAt(IntVector2 tileCoordinates)
@@ -323,6 +372,31 @@ public class ChessBoard : MonoBehaviour
       }
     }
     return pieces;
+  }
+
+  public Bitboard GetPiecePositions()
+  {
+    // UNITTEST
+    Bitboard bb = new Bitboard();
+    for (int x = 0; x < width; x++)
+    {
+      for (int y = 0; y < height; y++)
+      {
+        bb[x, y] = boardTiles[x, y] != null;
+      }
+    }
+    return bb;
+  }
+
+  public bool IsEliminated(ChessPiece piece)
+  {
+    return piece != null && (eliminatedBlackPieces.Contains(piece) || eliminatedWhitePieces.Contains(piece));
+  }
+
+  public int GetOrderEliminated(ChessPiece piece)
+  {
+    int whiteElim = eliminatedWhitePieces.IndexOf(piece);
+    return whiteElim >= 0 ? whiteElim : eliminatedBlackPieces.IndexOf(piece);
   }
 
   public void LogBoardState()

@@ -41,7 +41,7 @@ public static class ChessRuleEvaluator
       return false;
     }
     // Cannot promote an eliminated piece
-    if (board.eliminatedWhitePieces.Contains(toPromote) || board.eliminatedBlackPieces.Contains(toPromote))
+    if (board.IsEliminated(toPromote))
     {
       return false;
     }
@@ -56,7 +56,7 @@ public static class ChessRuleEvaluator
     }
     if (currentRuleSet.promotionOnlyToCaptured)
     {
-      if (!(board.eliminatedWhitePieces.Contains(promoteTo) || board.eliminatedBlackPieces.Contains(promoteTo)))
+      if (!board.IsEliminated(promoteTo))
       {
         return false;
       }
